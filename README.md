@@ -7,7 +7,7 @@
  - Скопировать токен бота в StoriesCollection/appsettings.json/BotConfiguration/BotToken    
  - Выполнить ```docker-compose up``` в дирректории проекта    
  - В рамках тестирования запустить ngrok полная строка: ```ngrok http 8443``` (ngrok прокидывает запусы с своего url, на наш localhost с портом, url сгенерированный ngrok нужен ниже)    
- - Сделать POST запрос (https://api.telegram.org/bot\${bottoken}/setWebhook?url=\${url}/api/bot/update), где \${bottoken} - апи бота (см. п2), \${url} - <b>https</b> url из ngrok (см. п4)    
+ - Сделать POST запрос (https://api.telegram.org/bot\${bottoken}/setWebhook?url=\${url}/api/bot/update), где \${bottoken} - токен бота (см. п2), \${url} - <b>https</b> url из ngrok (см. п4)    
 
 # Конфигурирование
 
