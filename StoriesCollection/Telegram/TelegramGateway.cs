@@ -25,21 +25,21 @@ namespace StoriesCollection.Telegram
             _logger = logger;
         }
 
-        public async Task<Message> SendMessage(long chatId, Dictionary<string, ButtonData>? buttons = null, string text = "Список доступных историй")
+        public async Task<Message> SendMessage(long chatId, Dictionary<string, string>? buttons = null, string text = "Список доступных историй", ParseMode parseMode = ParseMode.Html)
         {
-            List<List<InlineKeyboardButton>>? buttonCollection = buttons?.Select(x => new List<InlineKeyboardButton> { new InlineKeyboardButton(x.Key) { CallbackData = JsonSerializer.Serialize(x.Value) }})?.ToList();
+            List<List<InlineKeyboardButton>>? buttonCollection = buttons?.Select(x => new List<InlineKeyboardButton> { new InlineKeyboardButton(x.Key) { CallbackData = x.Value }})?.ToList();
 
             var replyMarkup = buttonCollection is null ? null : new InlineKeyboardMarkup(
                 buttonCollection
             );
-            return await _client.SendTextMessageAsync(chatId, text, ParseMode.Html, replyMarkup: replyMarkup);
+            return await _client.SendTextMessageAsync(chatId, text, parseMode, replyMarkup: replyMarkup);
         }
 
-        public async Task EditMessage(long chatId, int messageId, Dictionary<string, ButtonData>? buttons = null, string text = "Список доступных историй")
+        public async Task EditMessage(long chatId, int messageId, Dictionary<string, string>? buttons = null, string text = "Список доступных историй")
         {
             try
             {
-                var buttonCollection = buttons?.Select(x => new List<InlineKeyboardButton> { new InlineKeyboardButton(x.Key) { CallbackData = JsonSerializer.Serialize(x.Value) }});
+                var buttonCollection = buttons?.Select(x => new List<InlineKeyboardButton> { new InlineKeyboardButton(x.Key) { CallbackData = x.Value }});
                 await _client.EditMessageTextAsync(chatId, messageId, text, ParseMode.Html, replyMarkup: buttonCollection is null ? null : new InlineKeyboardMarkup(
                     buttonCollection
                 ));

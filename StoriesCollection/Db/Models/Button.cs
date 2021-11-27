@@ -10,10 +10,10 @@ namespace StoriesCollection.Db.Models
         [Required]
         public string Text { get; set; } = string.Empty;
 
-        public string? SourceStoryPartId { get; set; }
-        public StoryPart? SourceStoryPart { get; set; }
+        public int SourceStoryPartId { get; set; }
+        public StoryPart SourceStoryPart { get; set; }
 
-        public string? DestioationStoryPartId { get; set; }
-        public StoryPart? DestioationStoryPart { get; set; }
+        public int? DestinationStoryPartId { get; set; }
+        public StoryPart? DestinationStoryPart { get; set; }
     }
 }

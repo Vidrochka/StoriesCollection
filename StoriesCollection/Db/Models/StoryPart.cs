@@ -6,7 +6,7 @@ namespace StoriesCollection.Db.Models
     public class StoryPart
     {
         [Key]
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; }
 
         public int StoryId { get; set; }
         public Story Story { get; set; } = null!;

@@ -44,6 +44,8 @@ namespace StoriesCollection
 
             services.AddTransient<CallbackHandler>();
             services.AddTransient<CommandHandler>();
+            services.AddTransient<MessageHandler>();
+            
             services.AddTransient<MessageService>();
 
             services.AddSingleton<TelegramGateway>();

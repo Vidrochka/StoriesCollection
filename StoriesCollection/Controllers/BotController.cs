@@ -18,12 +18,14 @@ namespace StoriesCollection.Controllers
         private readonly ILogger<BotController> _logger;
         private readonly CallbackHandler _callbackHandler;
         private readonly CommandHandler _commandHandler;
+        private readonly MessageHandler _messageHandler;
 
-        public BotController(ILogger<BotController> logger, CallbackHandler callbackHandler, CommandHandler commandHandler)
+        public BotController(ILogger<BotController> logger, CallbackHandler callbackHandler, CommandHandler commandHandler, MessageHandler messageHandler)
         {
             _logger = logger;
             _callbackHandler = callbackHandler;
             _commandHandler = commandHandler;
+            _messageHandler = messageHandler;
         }
 
         [HttpGet]
@@ -38,7 +40,10 @@ namespace StoriesCollection.Controllers
             switch (EventClassifier.CheckEvent(update))
             {
                 case EventType.Message:
-                    break;
+                    {
+                        await _messageHandler.Handle(update.Message.Chat.Id, update.Message.Text);
+                        break;
+                    }
                 case EventType.Command:
                     {
                         await _commandHandler.Handle(update.Message.Chat.Id, update.Message.Text);

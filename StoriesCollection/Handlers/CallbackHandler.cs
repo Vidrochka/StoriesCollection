@@ -30,65 +30,59 @@ namespace StoriesCollection.Handlers
         {
             try
             {
-                var buttonData = JsonSerializer.Deserialize<ButtonData>(callback ?? "") ?? throw new Exception("Инвалидное поведение");
+                if(string.IsNullOrEmpty(callback)) throw new Exception($"Инвалидный callback chatId:[{chatId}]");
 
-                if (buttonData.StartMessageId is not null) await _telegramGateway.DeleteMessage(chatId, (int)buttonData.StartMessageId);
-                buttonData.StartMessageId = null;
-
-                if (buttonData.ButtonId is not null && buttonData.CurrentPartMessageId is not null)
+                switch (ButtonFactory.GetButton(callback))
                 {
-                    var button = await _storiesRepository.GetButton((int)buttonData.ButtonId);
-                    if (button is null)
-                    {
-                        await _messageService.SendStartMessage(chatId);
-                    }
-                    else
-                    {
-                        var currentPart = await _storiesRepository.GetStoryPart(buttonData.StoryId, button.SourceStoryPartId ?? "");
-                        if (currentPart is not null) await _messageService.EditMessage(chatId, (int)buttonData.CurrentPartMessageId, $"<b>{ currentPart.Text}</b>");
-                    }                            
-                }
-
-                switch (buttonData.Type)
-                {
-                    case ButtonType.StartStory:
+                    case StartStoryButton startButton:
                         {
-                            var storyInfo = await _storiesRepository.GetStoryInfo(buttonData.StoryId);
+                            if (startButton.StartMessageId is not null) await _telegramGateway.DeleteMessage(chatId, startButton.StartMessageId.Value);
 
+                            var storyInfo = await _storiesRepository.GetStoryInfo(startButton.StoryId);
                             await _messageService.SendSimpleMessage(chatId, $"------<b><i>{storyInfo?.Name}</i></b>------");
 
-                            if (storyInfo?.FirstStoryPartId is null)
-                            {
-                                await _messageService.SendStartMessage(chatId);
-                                return;
-                            }
+                            if (storyInfo?.FirstStoryPartId is null) throw new Exception("Ожидалось id первой части истории");
 
-                            var firstStoryPart = await _storiesRepository.GetStoryPart(storyInfo.Id, storyInfo.FirstStoryPartId ?? "");
+                            var firstStoryPart = await _storiesRepository.GetStoryPartWithButtons(storyInfo.FirstStoryPartId.Value);
 
-                            if (firstStoryPart is null)
-                            {
-                                await _messageService.SendStartMessage(chatId);
-                                return;
-                            }
+                            if (firstStoryPart is null) throw new Exception($"Не найдена части истории [{storyInfo.FirstStoryPartId.Value}]");
 
-                            await _messageService.SendStoryPart(chatId, firstStoryPart as StoryPart);
+                            await _messageService.SendStoryPart(chatId, firstStoryPart);
 
                             break;
                         }
-                    case ButtonType.NextPart:
+                    case EndStoryButton endButton:
                         {
-                            if (buttonData.ButtonId is null) throw new Exception("Инвалидное поведение");
+                            var button = await _storiesRepository.GetButton(endButton.ButtonId);
 
-                            var button = await _storiesRepository.GetButton((int)buttonData.ButtonId);
-                            if (button is null)
+                            if (button is not null)
                             {
-                                await _messageService.SendStartMessage(chatId);
-                                return;
+                                await _messageService.SendSimpleMessage(chatId, $"<i>{button.Text}</i>");
+
+                                var currentPart = await _storiesRepository.GetStoryPartWithButtons(button.SourceStoryPartId);
+                                if (currentPart is not null && endButton.CurrentPartMessageId is not null)
+                                    await _messageService.EditMessage(chatId, endButton.CurrentPartMessageId.Value, $"<b>{ currentPart.Text}</b>");
                             }
+
+                            await _messageService.SendStartMessage(chatId);
+
+                            break;
+                        }
+                    case NextStoryPartButton nextPartButton:
+                        {
+                            var button = await _storiesRepository.GetButton(nextPartButton.ButtonId);
+
+                            if (button is null) throw new Exception($"Не найдена кнопка [{nextPartButton.ButtonId}]");
+
+                            var currentPart = await _storiesRepository.GetStoryPartWithButtons(button.SourceStoryPartId);
+                            if (currentPart is not null && nextPartButton.CurrentPartMessageId is not null)
+                                await _messageService.EditMessage(chatId, nextPartButton.CurrentPartMessageId.Value, $"<b>{ currentPart.Text}</b>");
 
                             await _messageService.SendSimpleMessage(chatId, $"<i>{button.Text}</i>");
 
-                            var nextStoryPart = await _storiesRepository.GetStoryPart(buttonData.StoryId, button.DestioationStoryPartId ?? "");
+                            if (button.DestinationStoryPartId is null) throw new Exception("Ожидалось id следующей части истории");
+
+                            var nextStoryPart = await _storiesRepository.GetStoryPartWithButtons(button.DestinationStoryPartId.Value);
 
                             if (nextStoryPart is null)
                             {
@@ -96,28 +90,11 @@ namespace StoriesCollection.Handlers
                                 return;
                             }
 
-                            await _messageService.SendStoryPart(chatId, nextStoryPart as StoryPart);
-                            break;
-                        }
-                    case ButtonType.EndStory:
-                        {
-                            if (buttonData.ButtonId is not null)
-                            {
-                                var button = await _storiesRepository.GetButton((int)buttonData.ButtonId);
-
-                                if (button is not null)
-                                {
-                                    await _messageService.SendSimpleMessage(chatId, $"<i>{button.Text}</i>");
-                                }
-                            }
-
-                            await _messageService.SendStartMessage(chatId);
+                            await _messageService.SendStoryPart(chatId, nextStoryPart);
                             break;
                         }
                     default:
-                        {
-                            throw new Exception("Неверный тип кнопки");
-                        }
+                        throw new Exception($"Инвалидный колбэк charId:[{chatId}] [{callback}]");
                 }
             }
             catch (Exception ex)

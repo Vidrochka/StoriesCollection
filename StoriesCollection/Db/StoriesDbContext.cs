@@ -34,11 +34,11 @@ namespace StoriesCollection.Db
             });
 
             builder.Entity<Button>(entity => {
-                entity.HasIndex(e => new { e.SourceStoryPartId, e.DestioationStoryPartId }).IsUnique(false);
+                entity.HasIndex(e => new { e.SourceStoryPartId, e.DestinationStoryPartId }).IsUnique(false);
             });
 
             builder.Entity<Button>().HasOne(x => x.SourceStoryPart).WithMany(x => x.ButtonsNext);
-            builder.Entity<Button>().HasOne(x => x.DestioationStoryPart).WithMany(x => x.ButtonsFrom);
+            builder.Entity<Button>().HasOne(x => x.DestinationStoryPart).WithMany(x => x.ButtonsFrom);
         }
     }
 }

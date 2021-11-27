@@ -11,7 +11,7 @@ namespace StoriesCollection.Db.Models
         [Required]
         public string Name { get; set; } = string.Empty;
 
-        public string? FirstStoryPartId { get; set; }
+        public int? FirstStoryPartId { get; set; }
 
         public List<StoryPart> StoryParts { get; set; } = new List<StoryPart>();
     }
